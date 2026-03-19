@@ -1,4 +1,4 @@
-const CACHE = 'autopost-v5';
+const CACHE = 'autopost-v6';
 const BASE = '/autopost-pwa/';
 const ASSETS = [BASE, BASE + 'index.html', BASE + 'manifest.json', BASE + 'icon-192.png', BASE + 'icon-512.png', BASE + 'apple-touch-icon.png'];
 
