@@ -1,4 +1,4 @@
-const CACHE = 'autopost-v8';
+const CACHE = 'autopost-v9';
 const BASE = '/autopost-pwa/';
 const ASSETS = [BASE, BASE + 'index.html', BASE + 'manifest.json', BASE + 'icon-192.png', BASE + 'icon-512.png', BASE + 'apple-touch-icon.png'];
 
@@ -13,11 +13,16 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Network-first strategy: always try fresh, fall back to cache for offline
+  // Only cache same-origin requests (skip Google Fonts, external CDNs)
+  if (!e.request.url.startsWith(self.location.origin)) return;
+
+  // Network-first: always try fresh, fall back to cache for offline
   e.respondWith(
     fetch(e.request).then(response => {
-      const clone = response.clone();
-      caches.open(CACHE).then(c => c.put(e.request, clone));
+      if (response.ok) {
+        const clone = response.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+      }
       return response;
     }).catch(() => caches.match(e.request))
   );

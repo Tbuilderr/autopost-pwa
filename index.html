@@ -38,7 +38,7 @@
     .generate-btn:active { transform: scale(0.97); opacity: 0.9; }
     .generate-btn.loading { opacity: 0.35; pointer-events: none; }
 
-    .posts-container { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 12px; perspective: 1200px; }
+    .posts-container { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 12px; }
 
     .post-card {
       background: #141414; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px;
@@ -237,6 +237,14 @@
     const shownIndices = JSON.parse(localStorage.getItem('ap_shown') || '[]');
     function saveWindow() { localStorage.setItem('ap_shown', JSON.stringify(shownIndices.slice(-WINDOW_SIZE))); }
 
+    function fisherYates(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
     function pickThreePosts() {
       const recentSet = new Set(shownIndices.slice(-Math.min(shownIndices.length, WINDOW_SIZE)));
       let available = ALL_POSTS.map((_, i) => i).filter(i => !recentSet.has(i));
@@ -245,8 +253,8 @@
         const freshSet = new Set(shownIndices);
         available = ALL_POSTS.map((_, i) => i).filter(i => !freshSet.has(i));
       }
-      const shuffled = available.sort(() => Math.random() - 0.5);
-      const picked = shuffled.slice(0, 3);
+      if (available.length < 3) available = ALL_POSTS.map((_, i) => i);
+      const picked = fisherYates(available).slice(0, 3);
       picked.forEach(i => shownIndices.push(i));
       if (shownIndices.length > WINDOW_SIZE * 2) shownIndices.splice(0, shownIndices.length - WINDOW_SIZE);
       saveWindow();
@@ -259,7 +267,6 @@
     }
 
     // ---- Free post tracking with sneak rounds ----
-    const POSTS_PER_ROUND = 5;
     let postsUsed = parseInt(localStorage.getItem('ap_posts_used') || '0');
     let sneakRound = parseInt(localStorage.getItem('ap_sneak_round') || '0');
 
@@ -421,11 +428,15 @@
       showStatus(directPost ? 'Opening X app...' : 'Opened on X', directPost ? 'success' : 'info');
     }
 
-    function escapeHtml(text) { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
+    const _escDiv = document.createElement('div');
+    function escapeHtml(text) { _escDiv.textContent = text; return _escDiv.innerHTML; }
+
+    let _statusTimer = 0;
     function showStatus(message, type) {
+      clearTimeout(_statusTimer);
       const bar = document.getElementById('statusBar');
       bar.textContent = message; bar.className = `status-bar ${type} show`;
-      setTimeout(() => bar.classList.remove('show'), 3000);
+      _statusTimer = setTimeout(() => bar.classList.remove('show'), 3000);
     }
 
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
