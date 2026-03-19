@@ -29,33 +29,12 @@
     .header h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.8px; color: #f5f5f5; margin-bottom: 8px; }
     .header .subtitle { font-size: 16px; font-weight: 400; color: #4a4a4a; }
 
-    /* Auth screen */
-    .auth-screen { width: 100%; max-width: 380px; text-align: center; }
-    .auth-screen p { color: #666; font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
-    .email-input {
-      width: 100%; padding: 16px 20px; background: #141414; border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px; color: #e8e8e8; font-family: inherit; font-size: 16px;
-      outline: none; margin-bottom: 12px; -webkit-appearance: none;
-    }
-    .email-input:focus { border-color: rgba(255,255,255,0.15); }
-    .email-input::placeholder { color: #333; }
-    .auth-btn {
-      width: 100%; padding: 16px 28px; background: #f0f0f0; color: #0a0a0a; border: none;
-      border-radius: 14px; font-family: inherit; font-size: 16px; font-weight: 600;
-      cursor: pointer; -webkit-appearance: none; transition: all 0.15s;
-    }
-    .auth-btn:active { transform: scale(0.97); opacity: 0.9; }
-    .auth-btn:disabled { opacity: 0.3; pointer-events: none; }
-
-    /* Main app */
-    .app-screen { width: 100%; max-width: 560px; display: none; flex-direction: column; align-items: center; }
-    .app-screen.active { display: flex; }
+    .app-container { width: 100%; max-width: 560px; display: flex; flex-direction: column; align-items: center; }
 
     .user-bar {
-      width: 100%; display: flex; justify-content: space-between; align-items: center;
+      width: 100%; display: flex; justify-content: flex-end; align-items: center;
       margin-bottom: 24px; padding: 0 4px;
     }
-    .user-email { font-size: 12px; color: #333; }
     .posts-badge {
       font-size: 11px; color: #555; background: #141414; padding: 6px 12px;
       border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);
@@ -103,15 +82,21 @@
       padding: 10px 28px; border-radius: 12px; font-weight: 600; font-size: 14px;
     }
 
-    /* Paywall overlay */
+    /* Paywall */
     .paywall { display: none; text-align: center; padding: 40px 20px; }
     .paywall.active { display: block; }
     .paywall h2 { font-size: 22px; font-weight: 600; color: #f5f5f5; margin-bottom: 12px; }
-    .paywall p { color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+    .paywall p { color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 8px; }
+    .paywall .price { font-size: 28px; font-weight: 600; color: #f5f5f5; margin: 16px 0 4px; }
+    .paywall .price-sub { font-size: 13px; color: #555; margin-bottom: 24px; }
+    .paywall ul { list-style: none; text-align: left; max-width: 280px; margin: 0 auto 28px; }
+    .paywall ul li { color: #888; font-size: 14px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .paywall ul li::before { content: '✓ '; color: #5cb88a; font-weight: 600; }
     .subscribe-btn {
       padding: 16px 40px; background: #f0f0f0; color: #0a0a0a; border: none;
       border-radius: 14px; font-family: inherit; font-size: 16px; font-weight: 600;
       cursor: pointer; -webkit-appearance: none; transition: all 0.15s;
+      text-decoration: none; display: inline-block;
     }
     .subscribe-btn:active { transform: scale(0.97); opacity: 0.9; }
 
@@ -142,41 +127,41 @@
     <div class="subtitle">AI content posting agent</div>
   </div>
 
-  <!-- Auth Screen -->
-  <div class="auth-screen" id="authScreen">
-    <p>Enter your email to get started.<br>First 5 posts are free.</p>
-    <input type="email" class="email-input" id="emailInput" placeholder="your@email.com" autocomplete="email" autocapitalize="none">
-    <button class="auth-btn" id="authBtn" onclick="handleAuth()">Continue</button>
-  </div>
-
-  <!-- Main App Screen -->
-  <div class="app-screen" id="appScreen">
+  <div class="app-container">
     <div class="user-bar">
-      <span class="user-email" id="userEmail"></span>
       <span class="posts-badge" id="postsBadge"></span>
     </div>
-    <div class="controls">
+    <div class="controls" id="controls">
       <button class="generate-btn" id="generateBtn" onclick="generate()">Generate</button>
     </div>
     <div class="posts-container" id="postsContainer"></div>
     <div class="paywall" id="paywall">
       <h2>You've used your 5 free posts</h2>
-      <p>Subscribe to get unlimited posts and keep growing your X presence.</p>
-      <button class="subscribe-btn" onclick="handleSubscribe()">Subscribe</button>
+      <p>Upgrade to keep posting</p>
+      <div class="price">$20<span style="font-size:16px;color:#666;font-weight:400">/mo</span></div>
+      <div class="price-sub">Cancel anytime</div>
+      <ul>
+        <li>Unlimited post generations</li>
+        <li>One-tap posting to X</li>
+        <li>134 expert-written posts</li>
+        <li>No-repeat smart rotation</li>
+      </ul>
+      <a class="subscribe-btn" href="https://buy.stripe.com/test_28E6oIbhY7AS6exfBd4Ja00" target="_blank" onclick="waitForSubscription()">Subscribe</a>
     </div>
   </div>
 
   <div class="status-bar" id="statusBar"></div>
 
   <script>
-    const API_BASE = 'API_URL_PLACEHOLDER';
     const FREE_POSTS = 5;
+    const STRIPE_LINK = 'https://buy.stripe.com/test_28E6oIbhY7AS6exfBd4Ja00';
 
-    // ---- Embedded posts data ----
+    // ---- Embedded posts ----
     const ALL_POSTS = [{"pillar":"PORTFOLIO STRATEGY","content":"BTC at 40-60% of your portfolio isn't conservative. It's what lets you sleep at night and still be in the game 4 years from now."},{"pillar":"PORTFOLIO STRATEGY","content":"If you can't explain why you own something in one sentence, your position size should be zero."},{"pillar":"PORTFOLIO STRATEGY","content":"Stablecoins aren't a sign of weakness. Cash is a position. The best traders I know hold 20-30% dry powder at all times."},{"pillar":"PORTFOLIO STRATEGY","content":"The difference between a 2% allocation and a 10% allocation is the difference between a story and a conviction."},{"pillar":"PORTFOLIO STRATEGY","content":"Every alt in your portfolio is a venture bet. Size it like one. 2-5% max. If it 10x's, you'll still feel it. If it zeros, you survive."},{"pillar":"PORTFOLIO STRATEGY","content":"I've never met a rich trader who didn't have a stop-loss discipline. I've met plenty of broke ones who didn't."},{"pillar":"PORTFOLIO STRATEGY","content":"Your portfolio should answer one question: \"If I'm wrong about everything except BTC, do I still make it?\" If no, restructure."},{"pillar":"PORTFOLIO STRATEGY","content":"Cold storage isn't paranoia. It's what separated the people who recovered from FTX from the ones who didn't."},{"pillar":"PORTFOLIO STRATEGY","content":"Taking 20% profit on a 3x feels wrong in the moment and brilliant 6 months later. Every single time."},{"pillar":"PORTFOLIO STRATEGY","content":"The most dangerous phrase in crypto: \"I'll take profits on the way down.\" No you won't. Set levels now."},{"pillar":"PORTFOLIO STRATEGY","content":"You don't need 20 coins. You need 5 high-conviction positions and the discipline to size them correctly."},{"pillar":"PORTFOLIO STRATEGY","content":"The goal isn't maximum exposure. The goal is asymmetric return. Big upside, bounded downside. That's how professionals think."},{"pillar":"PORTFOLIO STRATEGY","content":"If your portfolio is 90% alts, you don't have a strategy. You have a lottery ticket collection."},{"pillar":"PORTFOLIO STRATEGY","content":"The best risk management tool in crypto is a spreadsheet. Track every position, every entry, every thesis. If you can't track it, you can't manage it."},{"pillar":"PORTFOLIO STRATEGY","content":"Diversification in crypto doesn't mean owning 30 tokens. It means owning uncorrelated assets across different thesis categories."},{"pillar":"PORTFOLIO STRATEGY","content":"Bull market portfolio vs bear market portfolio are two different animals. If you're running the same allocation in both, you're doing it wrong."},{"pillar":"PORTFOLIO STRATEGY","content":"Leverage in crypto is a loaded gun pointed at your portfolio. I've used it exactly twice in 15 years. Both times under 2x. Both times with a hard stop."},{"pillar":"PORTFOLIO STRATEGY","content":"DCA into BTC is boring. It also outperforms 90% of active traders over any 4-year period. Boring works."},{"pillar":"PORTFOLIO STRATEGY","content":"You don't have diamond hands. You have no exit plan. There's a difference."},{"pillar":"PORTFOLIO STRATEGY","content":"The traders who survive decades all share one trait: they cut losers fast and let winners run. Simple to say, brutal to execute."},{"pillar":"PORTFOLIO STRATEGY","content":"If you're checking your portfolio more than twice a day, your position sizes are too large for your risk tolerance."},{"pillar":"PORTFOLIO STRATEGY","content":"Conviction without position sizing is just gambling with extra steps."},{"pillar":"PORTFOLIO STRATEGY","content":"Your first 10% gain in crypto feels life-changing. Your first 50% drawdown teaches you everything. The second one shouldn't happen."},{"pillar":"PORTFOLIO STRATEGY","content":"Rebalancing quarterly forces you to sell high and buy low automatically. It's systematic profit-taking disguised as maintenance."},{"pillar":"PORTFOLIO STRATEGY","content":"I keep a \"kill list\" — prices where I exit every alt no matter what. Decided in advance, when I'm rational. Not in the middle of a -40% candle."},{"pillar":"PORTFOLIO STRATEGY","content":"Hardware wallet + metal seed backup + geographic distribution. That's not paranoia, that's basic operational security for serious capital."},{"pillar":"PORTFOLIO STRATEGY","content":"I've watched 3 friends lose 6-figure portfolios to exchange hacks. Not one had funds in cold storage. Don't be the lesson someone else learns from."},{"pillar":"PORTFOLIO STRATEGY","content":"The Kelly Criterion says bet proportional to your edge. In crypto, most people massively overestimate their edge. Size down."},{"pillar":"PORTFOLIO STRATEGY","content":"Your alt portfolio should be a barbell: 70% in top-10 infrastructure plays, 30% in high-conviction moonshots. Nothing in the mushy middle."},{"pillar":"PORTFOLIO STRATEGY","content":"I review my portfolio thesis every Sunday. If I can't re-justify a position, I cut it Monday. No emotions, no exceptions."},{"pillar":"PORTFOLIO STRATEGY","content":"The biggest portfolio mistake isn't buying the wrong coin. It's putting 30% into it."},{"pillar":"PORTFOLIO STRATEGY","content":"5 signs your crypto portfolio is too risky:\n\n1. No BTC position above 30%\n2. Any single alt above 10%\n3. Zero stablecoin allocation\n4. You can't sleep during a -15% day\n5. You don't have exit prices written down"},{"pillar":"PORTFOLIO STRATEGY","content":"Asset allocation explains 90% of returns in traditional finance. In crypto it explains 99%. Get the weights right and the picks matter less."},{"pillar":"PORTFOLIO STRATEGY","content":"I'd rather own 3 BTC than 30 different altcoins worth 3 BTC total. Concentration in quality beats diversification in garbage."},{"pillar":"PORTFOLIO STRATEGY","content":"The hardest trade in crypto isn't buying the dip. It's selling when you're up 500% and everyone is calling for 1000%."},{"pillar":"PORTFOLIO STRATEGY","content":"Risk management isn't fear. It's the reason I've been profitable across 4 full crypto cycles while most people blew up after 1."},{"pillar":"PORTFOLIO STRATEGY","content":"Your portfolio's worst day should never threaten your ability to stay in the game. If it does, you're over-allocated."},{"pillar":"PORTFOLIO STRATEGY","content":"I treat every new alt position like a VC investment: fixed check size, known max loss, multi-year hold or zero. No middle ground."},{"pillar":"PORTFOLIO STRATEGY","content":"There's a reason institutions allocate 1-5% to crypto. It's not because they don't believe in it. It's because they understand position sizing."},{"pillar":"PORTFOLIO STRATEGY","content":"Write down your portfolio allocation today. Put it in a drawer. Open it in 12 months. You'll either be grateful or educated."},{"pillar":"PORTFOLIO STRATEGY","content":"Everyone has a plan until BTC drops 40% in a week. That's when you find out if your allocation was a strategy or a wish."},{"pillar":"PORTFOLIO STRATEGY","content":"The best trade I ever made was moving 60% of my portfolio to BTC in Nov 2021 when alts were flying. Felt stupid then. Saved me $200K+."},{"pillar":"PORTFOLIO STRATEGY","content":"Your net worth should not be 100% crypto. Real diversification includes assets outside this ecosystem entirely."},{"pillar":"PORTFOLIO STRATEGY","content":"Position sizing protects you from yourself. It turns emotional decisions into mathematical ones. That's its real power."},{"pillar":"PORTFOLIO STRATEGY","content":"If you're up 10x on an alt and haven't taken a single dollar off the table, you're not investing. You're hoping."},{"pillar":"PORTFOLIO STRATEGY","content":"Tax-loss harvesting in crypto is free money most people ignore. Sell losers in December, repurchase in January. Reduce your tax bill legally."},{"pillar":"PORTFOLIO STRATEGY","content":"I split my portfolio across 3 hardware wallets and 2 multisig setups. The inconvenience is intentional. It prevents impulse trades."},{"pillar":"PORTFOLIO STRATEGY","content":"The 1% rule: never risk more than 1% of your total portfolio on a single trade idea. Over 100 trades, you'll survive every losing streak."},{"pillar":"PORTFOLIO STRATEGY","content":"Everyone talks about their wins. Nobody posts the 7 alts that went to zero funding those wins. Survivorship bias is real. Size accordingly."},{"pillar":"PORTFOLIO STRATEGY","content":"My bear market portfolio: 60% BTC, 20% stables, 15% ETH, 5% high-conviction alts. My bull market portfolio: 45% BTC, 25% alts, 20% ETH, 10% stables."},{"pillar":"PORTFOLIO STRATEGY","content":"If you wouldn't buy it today at this price, you shouldn't hold it today at this price. Sunk cost fallacy kills portfolios."},{"pillar":"CRYPTO + AI","content":"AI agents will need wallets before they need bodies. The first trillion-dollar AI economy will run on stablecoins and smart contracts, not bank accounts."},{"pillar":"CRYPTO + AI","content":"The AI agent economy needs three things: identity, payments, and trust. Crypto solves all three. That's not a coincidence."},{"pillar":"CRYPTO + AI","content":"When AI agents start paying other AI agents for services, they won't use Visa. They'll use programmable money on rails that never close."},{"pillar":"CRYPTO + AI","content":"Decentralized GPU markets are offering the same compute at a lower price."},{"pillar":"CRYPTO + AI","content":"AI models are getting cheaper to run. But they're running more often. Total compute demand is exploding. Decentralized GPU networks capture that overflow."},{"pillar":"CRYPTO + AI","content":"AI agents executing DeFi strategies already outperform manual traders on average. The question isn't if DeFi goes autonomous — it's when."},{"pillar":"CRYPTO + AI","content":"The best AI x crypto projects have one thing in common: the token accrues value from compute demand, not speculation. Revenue > narrative."},{"pillar":"CRYPTO + AI","content":"The AI token I'm most interested in? The one where token burns are tied to compute usage. Not governance. Not staking rewards. Usage."},{"pillar":"CRYPTO + AI","content":"DePIN + AI = decentralized physical infrastructure running AI workloads. It's ugly, it's early, and it's generating real cash flow today."},{"pillar":"CRYPTO + AI","content":"AI agents partially managing treasury for DAOs will be standard within 2 years. Smarter allocation, 24/7 rebalancing, no human ego. It's just better."},{"pillar":"CRYPTO + AI","content":"The middleware layer between AI agents and blockchains is where the next billion-dollar protocol lives. Watch for projects building agent SDKs on-chain."},{"pillar":"CRYPTO + AI","content":"The Crypto x AI thesis is about building the economic layer that all AI agents — centralized or not — need to transact."},{"pillar":"CRYPTO + AI","content":"Most AI agent projects are demos pretending to be products. The ones with real on-chain transaction volume are the ones worth tracking."},{"pillar":"CRYPTO + AI","content":"Autonomous AI agents will generate more blockchain transactions than humans within 5 years."},{"pillar":"CRYPTO + AI","content":"Agent-to-agent payments will start with micro-transactions: an AI paying another AI $0.001 for a data query. Banks can't process this. Crypto can."},{"pillar":"CRYPTO + AI","content":"The AI narrative in crypto will have the same arc as DeFi: 90% of projects die, 10% become critical infrastructure."},{"pillar":"CRYPTO + AI","content":"The compute layer is crypto's strongest AI play. It has demand. It has revenue. It has a clear path to token value."},{"pillar":"CRYPTO + AI","content":"People asking \"is AI x crypto real?\" are asking the wrong question. The right question is: which AI x crypto projects have sustainable economics and tokenomics?"},{"pillar":"CRYPTO + AI","content":"AI will make DeFi accessible to everyone. Natural language to swap. Agent-managed portfolios. Automated risk assessment. The UX revolution is AI-powered."},{"pillar":"US REGULATORY & MACRO","content":"BTC ETF inflows are absorbing more than the daily mining supply. Basic supply-demand math."},{"pillar":"US REGULATORY & MACRO","content":"Stablecoin legislation is the most important crypto bill in Washington right now. It legitimizes the entire on-chain dollar system overnight."},{"pillar":"US REGULATORY & MACRO","content":"A Strategic Bitcoin Reserve means the US government is treating BTC as a reserve asset alongside gold. Re-read that sentence slowly."},{"pillar":"US REGULATORY & MACRO","content":"Washington isn't trying to kill crypto anymore. They're trying to control it. That's actually more bullish than you think."},{"pillar":"US REGULATORY & MACRO","content":"The ETH ETF approval was the market saying: crypto isn't going away. The stablecoin bill will be the market saying: crypto is going mainstream in a long run."},{"pillar":"US REGULATORY & MACRO","content":"Fed net liquidity is the one of the best indicators of BTC price direction. When liquidity expands, BTC rallies. When it contracts, BTC corrects."},{"pillar":"US REGULATORY & MACRO","content":"Stablecoins are America's secret weapon for dollar dominance. $160B+ in dollar-denominated stablecoins circulating globally. Treasury gets it."},{"pillar":"US REGULATORY & MACRO","content":"Most of the major financial institutions now have a crypto desk. The infrastructure for institutional adoption is more developed than people expect."},{"pillar":"US REGULATORY & MACRO","content":"The SEC's approach is shifting from \"regulate by enforcement\" to actual rulemaking. This gives projects legal clarity to build in the US. Bullish."},{"pillar":"US REGULATORY & MACRO","content":"The real ETF story isn't about price. It's about legitimacy. BTC went from \"internet money\" to a regulated, auditable, institutionally-held asset in 12 months."},{"pillar":"US REGULATORY & MACRO","content":"The TGA (Treasury General Account) draining is a stealth liquidity injection. When the government spends its savings, that money enters the system. BTC responds."},{"pillar":"US REGULATORY & MACRO","content":"ETF approval → stablecoin bill → market structure legislation → tokenized securities framework. This is the regulatory roadmap. We're at stage 2."},{"pillar":"US REGULATORY & MACRO","content":"When both parties in Congress are competing to be more pro-crypto, you're not early anymore. But you're not late either. The institutional wave is just starting."},{"pillar":"US REGULATORY & MACRO","content":"BTC is the only asset that benefits from both inflationary AND deflationary macro scenarios. Inflation → hard money narrative. Deflation → central bank printing response."},{"pillar":"US REGULATORY & MACRO","content":"The stablecoin market is at $160B. If the legislation passes, it goes to $500B+ within 18 months. That's $500B in demand for US treasuries. Congress understands this."},{"pillar":"US REGULATORY & MACRO","content":"Rate cuts are bullish for crypto only if they happen without a crisis. Crisis cuts mean risk-off first, rally later. The path matters as much as the destination."},{"pillar":"US REGULATORY & MACRO","content":"The USD stablecoin market is the fastest-growing dollar product in history. And it's making the dollar stronger, not weaker. That's why Congress will pass the bill."},{"pillar":"US REGULATORY & MACRO","content":"A spot ETH ETF with staking would generate 3-4% yield for institutional holders. That makes ETH a yield-bearing digital asset. The implications are enormous."},{"pillar":"US REGULATORY & MACRO","content":"Regulatory clarity, institutional infrastructure, and sovereign interest are making the stars aligned."},{"pillar":"US REGULATORY & MACRO","content":"Markets front-run the Fed by 6-9 months. If you wait for the rate cut announcement to buy crypto, you're already late. Price in the probability, not the event."},{"pillar":"US REGULATORY & MACRO","content":"The reverse repo facility draining from $2.5T to near-zero was the largest liquidity injection in modern history. And it happened while BTC went from $16K to $70K+. Not a coincidence."},{"pillar":"US REGULATORY & MACRO","content":"The next wave of crypto regulation will focus on DeFi. Protocols with clear compliance frameworks will outperform. Those without will face existential risk."},{"pillar":"US REGULATORY & MACRO","content":"Sovereign wealth funds are allocating to BTC. Abu Dhabi, Norway, Singapore — all have exposure through ETFs or direct holdings. This is the new normal."},{"pillar":"US REGULATORY & MACRO","content":"The Fed's dual mandate is full employment and price stability. Crypto thrives when one mandate fails and the Fed has to choose. That's the macro edge."},{"pillar":"US REGULATORY & MACRO","content":"The biggest risk to crypto is liquidity crisis where everything sells off simultaneously. Hold stables for this scenario."},{"pillar":"US REGULATORY & MACRO","content":"The Treasury yield curve un-inverting historically precedes risk-on rallies by 6-12 months. We're in that window now. History doesn't repeat but it rhymes quite often."},{"pillar":"US REGULATORY & MACRO","content":"If the US Strategic Bitcoin Reserve grows to 1M+ BTC, it would be the largest single holder besides Satoshi. That's a $100B+ position at current prices."},{"pillar":"US REGULATORY & MACRO","content":"Central bank balance sheets globally are at $30T+. Even a 1% allocation to BTC = $300B in buying pressure on an asset with $1.5T market cap. Do the math."},{"pillar":"CYCLE AWARENESS","content":"Everyone knows to \"buy low, sell high.\" Almost nobody does it. Because buying low feels terrifying and selling high feels stupid."},{"pillar":"CYCLE AWARENESS","content":"The best time to buy crypto was when you didn't want to. Oct 2022. March 2020. Dec 2018. The worst time was when everyone was telling you to."},{"pillar":"CYCLE AWARENESS","content":"The crypto cycle lasts ~4 years. 12-18 months of accumulation. 12 months of markup. 6 months of euphoria. 12-18 months of decline. Know where you are."},{"pillar":"CYCLE AWARENESS","content":"Market outflows hitting multi-year highs = accumulation. Market inflows spiking = distribution. This is the most reliable on-chain signal. Track it."},{"pillar":"CYCLE AWARENESS","content":"Most people buy crypto for the first time at all-time highs. That's not their fault — that's when media coverage peaks. It's your job to be earlier."},{"pillar":"CYCLE AWARENESS","content":"The most profitable position in crypto is the one you entered when nobody cared. Accumulation zones feel lonely. That's how you know they're working."},{"pillar":"CYCLE AWARENESS","content":"Every cycle, 80% of altcoins from the previous cycle never recover their highs. SOL was the exception, not the rule. Don't marry your alts."},{"pillar":"CYCLE AWARENESS","content":"Bear markets feel like they'll last forever. Bull markets feel like they'll never end. Both feelings are wrong. Plan for both outcomes."},{"pillar":"CYCLE AWARENESS","content":"The smartest thing I did in 2022 wasn't any trade. It was staying in the market at all. 90% of people who left in the bear haven't come back yet."},{"pillar":"CYCLE AWARENESS","content":"On-chain data doesn't lie, but it speaks quietly. Exchange reserves, whale wallets, miner behavior — these told the story 3 months before the price did."},{"pillar":"CYCLE AWARENESS","content":"The 200-week moving average has been the single best long-term buy signal for BTC. It's been touched 4 times. Each time marked a generational entry."},{"pillar":"CYCLE AWARENESS","content":"The people who made generational wealth in crypto did one thing: they bought during capitulation events and held through recovery. Simple. Not easy."},{"pillar":"CYCLE AWARENESS","content":"The accumulation zone is where wealth is built. The euphoria zone is where wealth is captured. Most people confuse the two and do both wrong."},{"pillar":"CYCLE AWARENESS","content":"Every cycle has a moment where BTC drops 30%+ and everyone declares the bull market over. It's happened in every single cycle. It's a buying opportunity, not an exit."},{"pillar":"CYCLE AWARENESS","content":"The worst time to develop a thesis is when you're staring at a -50% portfolio."},{"pillar":"CYCLE AWARENESS","content":"The biggest alpha in crypto is patience. Being right about direction but wrong about timing has destroyed dozens of good portfolios."},{"pillar":"CYCLE AWARENESS","content":"7 lessons from surviving 4 crypto cycles:\n\n1. The bottom feels like the end\n2. The top feels like the beginning\n3. 90% of alts die between cycles\n4. BTC always leads the recovery\n5. Leverage kills in bear markets\n6. Cash in a crash is a superpower\n7. The cycle always comes back"},{"pillar":"CYCLE AWARENESS","content":"The smart money accumulates when daily trading volume drops 70%+ from peak. Low volume + low price = disinterest. Disinterest = opportunity."},{"pillar":"CYCLE AWARENESS","content":"In every cycle, there's a \"this is the last dip\" moment followed by an actual last dip that's significantly lower. Buying in tranches solves this problem."},{"pillar":"MACRO MOVES","content":"Japan's yield curve control ending indeed sent shockwaves through global bond markets"},{"pillar":"MACRO MOVES","content":"Real yields (nominal yield minus inflation) are what matter. If inflation falls faster than rates, real yields rise and crypto faces headwinds even during cuts."},{"pillar":"MACRO MOVES","content":"Credit spreads widening = risk-off. Credit spreads tightening = risk-on. Crypto trades as a high beta risk asset. When spreads tighten, BTC outperforms everything."},{"pillar":"MACRO MOVES","content":"Crypto winter doesn't start with a price crash. It starts with liquidity drying up. By the time you see the crash, the liquidity exit was 3 months ago."},{"pillar":"MACRO MOVES","content":"The Fed's balance sheet is still above $7T. In 2019, it was $3.8T. Even after QT, we're swimming in more liquidity than any pre-2020 period."},{"pillar":"MACRO MOVES","content":"Oil prices above $100 = inflation pressure = hawkish Fed = bad for crypto."},{"pillar":"MACRO MOVES","content":"The Fed dot plot matters more than the actual rate decision. Markets care about the path of rates, not today's rate. A hold with dovish dots is more bullish than a cut with hawkish dots."},{"pillar":"MACRO MOVES","content":"Unemployment rising slowly is ignored. Unemployment rising quickly triggers recession fears and emergency cuts. The speed of deterioration matters more than the number."},{"pillar":"MACRO MOVES","content":"BTC's role in a macro portfolio is changing. It went from pure speculation to a hybrid: part growth asset, part inflation hedge, part liquidity barometer."},{"pillar":"MACRO MOVES","content":"Global debt-to-GDP above 350%. The only way to manage this debt is to inflate it away or default. Both outcomes are massively bullish for BTC over 10 years."},{"pillar":"MACRO MOVES","content":"Interest payments on US debt now exceed $1T/year. That's $1T that needs to be financed."},{"pillar":"MACRO MOVES","content":"When the yield curve steepens from inverted to normal, risk assets rally for 12-18 months. We're in the early innings of that steepening now."},{"pillar":"PORTFOLIO STRATEGY","content":"A basic difference between gambling and investing in crypto: a written plan with entry prices, exit prices, position sizes."},{"pillar":"CRYPTO + AI","content":"Most AI tokens are trading on narrative. Revenue matters."},{"pillar":"CRYPTO + AI","content":"Autonomous AI agents managing DeFi positions is what we see happening."},{"pillar":"CYCLE AWARENESS","content":"Google Trends for \"buy bitcoin\" is a lagging indicator. By the time searches spike, smart money has already accumulated. Sometimes using it as a contrarian signal is a better idea."},{"pillar":"CYCLE AWARENESS","content":"The best cycle strategy isn't timing tops and bottoms. It's DCA in the bottom quartile and DCA out in the top quartile. Range-based, not point-based."}];
 
     // ---- State ----
-    let currentUser = null;
+    let postsUsed = parseInt(localStorage.getItem('ap_posts_used') || '0');
+    let isSubscribed = localStorage.getItem('ap_subscribed') === 'true';
 
     // ---- Rolling window ----
     const WINDOW_SIZE = 700;
@@ -204,68 +189,40 @@
       });
     }
 
-    // ---- Auth ----
-    async function handleAuth() {
-      const email = document.getElementById('emailInput').value.trim().toLowerCase();
-      if (!email || !email.includes('@')) { showStatus('Enter a valid email', 'error'); return; }
-
-      document.getElementById('authBtn').disabled = true;
-      try {
-        const res = await fetch(`${API_BASE}/api/auth`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-
-        currentUser = data;
-        localStorage.setItem('ap_email', email);
-        showApp();
-      } catch (err) {
-        showStatus(err.message || 'Connection failed', 'error');
-        document.getElementById('authBtn').disabled = false;
-      }
-    }
-
-    function showApp() {
-      document.getElementById('authScreen').style.display = 'none';
-      document.getElementById('appScreen').classList.add('active');
-      document.getElementById('userEmail').textContent = currentUser.email;
-      updateBadge();
-    }
-
+    // ---- UI State ----
     function updateBadge() {
       const badge = document.getElementById('postsBadge');
-      if (currentUser.subscribed) {
+      const paywall = document.getElementById('paywall');
+      const controls = document.getElementById('controls');
+      const container = document.getElementById('postsContainer');
+
+      if (isSubscribed) {
         badge.textContent = '∞ Unlimited';
         badge.className = 'posts-badge subscribed';
-      } else {
-        const remaining = Math.max(0, FREE_POSTS - currentUser.posts_used);
-        badge.textContent = `${remaining}/${FREE_POSTS} free posts`;
-        badge.className = 'posts-badge' + (remaining <= 2 ? ' warning' : '');
-      }
-
-      // Show/hide paywall
-      const paywall = document.getElementById('paywall');
-      const controls = document.querySelector('.controls');
-      const container = document.getElementById('postsContainer');
-      if (!currentUser.subscribed && currentUser.posts_used >= FREE_POSTS) {
-        paywall.classList.add('active');
-        controls.style.display = 'none';
-        container.style.display = 'none';
-      } else {
         paywall.classList.remove('active');
         controls.style.display = 'block';
         container.style.display = 'flex';
+      } else {
+        const remaining = Math.max(0, FREE_POSTS - postsUsed);
+        badge.textContent = `${remaining}/${FREE_POSTS} free posts`;
+        badge.className = 'posts-badge' + (remaining <= 2 ? ' warning' : '');
+
+        if (postsUsed >= FREE_POSTS) {
+          paywall.classList.add('active');
+          controls.style.display = 'none';
+          container.style.display = 'none';
+        } else {
+          paywall.classList.remove('active');
+          controls.style.display = 'block';
+          container.style.display = 'flex';
+        }
       }
     }
 
     // ---- Generate ----
     function generate() {
-      if (!currentUser.subscribed && currentUser.posts_used >= FREE_POSTS) {
-        updateBadge();
-        return;
-      }
+      if (!isSubscribed && postsUsed >= FREE_POSTS) { updateBadge(); return; }
+
       const btn = document.getElementById('generateBtn');
       btn.classList.add('loading');
       btn.innerHTML = '<span class="spinner"></span> Generating';
@@ -300,68 +257,32 @@
     }
 
     // ---- Post to X ----
-    async function postToX(text, card, directPost) {
+    function postToX(text, card, directPost) {
       if (card.classList.contains('posted')) return;
 
+      const encoded = encodeURIComponent(text);
+
       if (directPost) {
-        // Try API first
-        showStatus('Posting to X...', 'info');
-        try {
-          const res = await fetch(`${API_BASE}/api/post`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text, email: currentUser.email })
-          });
-          const data = await res.json();
-
-          if (data.error === 'free_limit') {
-            currentUser.posts_used = FREE_POSTS;
-            updateBadge();
-            showStatus('Free posts used. Subscribe to continue.', 'error');
-            return;
-          }
-
-          if (data.success) {
-            card.classList.add('posted');
-            currentUser.posts_used = data.posts_used;
-            updateBadge();
-            showStatus('Posted to X ✓', 'success');
-            return;
-          }
-
-          // API posting failed — fallback to intent URL
-          throw new Error(data.error?.detail || 'API error');
-        } catch (err) {
-          console.log('API post failed, falling back to intent:', err);
-          // Fallback: open X with pre-filled text
-          const encoded = encodeURIComponent(text);
-          window.location.href = `twitter://post?message=${encoded}`;
-          setTimeout(() => window.open(`https://x.com/intent/post?text=${encoded}`, '_blank'), 1500);
-          card.classList.add('posted');
-          // Still count locally
-          currentUser.posts_used++;
-          updateBadge();
-          showStatus('Opened in X app', 'info');
-        }
+        // Try X app deep link, fallback to web
+        window.location.href = `twitter://post?message=${encoded}`;
+        setTimeout(() => {
+          window.open(`https://x.com/intent/post?text=${encoded}`, '_blank');
+        }, 1500);
       } else {
-        const encoded = encodeURIComponent(text);
         window.open(`https://x.com/intent/post?text=${encoded}`, '_blank');
-        showStatus('Opened on X', 'info');
       }
+
+      card.classList.add('posted');
+      postsUsed++;
+      localStorage.setItem('ap_posts_used', postsUsed.toString());
+      updateBadge();
+      showStatus(directPost ? 'Opening X app...' : 'Opened on X', directPost ? 'success' : 'info');
     }
 
-    // ---- Subscribe ----
-    async function handleSubscribe() {
-      try {
-        const res = await fetch(`${API_BASE}/api/subscribe`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: currentUser.email })
-        });
-        const data = await res.json();
-        if (data.url) window.location.href = data.url;
-        else showStatus('Could not start checkout', 'error');
-      } catch (err) {
-        showStatus('Connection failed', 'error');
-      }
+    // ---- Subscription ----
+    function waitForSubscription() {
+      // When user returns from Stripe, check URL params
+      showStatus('Opening checkout...', 'info');
     }
 
     // ---- Utils ----
@@ -373,38 +294,17 @@
     }
 
     // ---- Init ----
-    (async function init() {
-      // Check URL params for subscription success
+    (function init() {
       const params = new URLSearchParams(window.location.search);
       if (params.get('subscribed') === 'true') {
+        isSubscribed = true;
+        localStorage.setItem('ap_subscribed', 'true');
         history.replaceState({}, '', window.location.pathname);
-        showStatus('Subscription activated! 🎉', 'success');
+        showStatus('Subscription activated!', 'success');
       }
-
-      // Auto-login if email saved
-      const savedEmail = localStorage.getItem('ap_email');
-      if (savedEmail) {
-        try {
-          const res = await fetch(`${API_BASE}/api/status`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: savedEmail })
-          });
-          if (res.ok) {
-            currentUser = await res.json();
-            showApp();
-            return;
-          }
-        } catch (e) { /* offline or server down — show auth */ }
-      }
-
-      // Show auth screen
-      document.getElementById('authScreen').style.display = 'block';
-      document.getElementById('emailInput').addEventListener('keydown', e => {
-        if (e.key === 'Enter') handleAuth();
-      });
+      updateBadge();
     })();
 
-    // Service worker
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   </script>
 </body>
