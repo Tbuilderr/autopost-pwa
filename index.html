@@ -304,18 +304,26 @@
 
     function updateBadge() {
       const badge = document.getElementById('postsBadge');
+      if (localStorage.getItem('ap_subscribed') === 'true') {
+        badge.textContent = 'Pro';
+        badge.className = 'posts-badge';
+        badge.style.display = 'block';
+        badge.style.color = '#5cb88a';
+        return;
+      }
+      badge.style.color = '';
       const limit = getCurrentLimit();
       const remaining = Math.max(0, limit - postsUsed);
       badge.textContent = `${remaining} free left`;
       badge.className = 'posts-badge' + (remaining <= 2 ? ' warning' : '');
       badge.style.display = 'block';
-      // Pulse animation
       badge.classList.remove('pulse');
       void badge.offsetWidth;
       badge.classList.add('pulse');
     }
 
     function checkPaywall() {
+      if (localStorage.getItem('ap_subscribed') === 'true') return false;
       const limit = getCurrentLimit();
       if (postsUsed >= limit) {
         const paywall = document.getElementById('paywall');
@@ -348,7 +356,7 @@
     }
 
     function handleSubscribe() {
-      showStatus('Subscription coming soon', 'info');
+      window.location.href = 'https://buy.stripe.com/test_aFa00kdq61cugTb60D4Ja01';
     }
 
     function generate() {
@@ -438,6 +446,30 @@
       bar.textContent = message; bar.className = `status-bar ${type} show`;
       _statusTimer = setTimeout(() => bar.classList.remove('show'), 3000);
     }
+
+    // Handle return from Stripe checkout
+    (function handleSubscriptionReturn() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('subscribed') === 'true') {
+        // Unlock: reset all limits
+        postsUsed = 0;
+        sneakRound = 0;
+        localStorage.setItem('ap_posts_used', '0');
+        localStorage.setItem('ap_sneak_round', '0');
+        localStorage.setItem('ap_subscribed', 'true');
+        history.replaceState({}, '', window.location.pathname);
+        document.getElementById('paywall').classList.remove('active');
+        updateBadge();
+        showStatus('Subscription activated!', 'success');
+      }
+      // If previously subscribed, keep unlocked
+      if (localStorage.getItem('ap_subscribed') === 'true') {
+        document.getElementById('postsBadge').textContent = 'Pro';
+        document.getElementById('postsBadge').className = 'posts-badge';
+        document.getElementById('postsBadge').style.display = 'block';
+        document.getElementById('postsBadge').style.color = '#5cb88a';
+      }
+    })();
 
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   </script>
